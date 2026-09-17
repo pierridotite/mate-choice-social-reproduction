@@ -1,0 +1,21 @@
+# raw Census tables (46 MB): re-downloadable, see data-raw/README.md
+data-raw/*.dat
+
+# R working files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+Rplots.pdf
+
+# Shiny deployment
+rsconnect/
+
+# secrets: never commit
+.Renviron
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
