@@ -4,6 +4,51 @@ Code : [R/02_exploration.R](R/02_exploration.R). Figures exportées dans `output
 
 Ce document sert à comprendre le jeu de données avant de s'en servir. Il ne répond pas encore à la problématique : il dit ce que contient la table, ce qui est fiable, ce qui ne l'est pas, et ce que cela impose pour la suite.
 
+## L'expérience en un schéma
+
+Les données viennent de 21 soirées de speed dating organisées par Fisman, Iyengar, Kamenica et Simonson entre 2002 et 2004 pour des étudiants de l'université Columbia. Le schéma suit un participant du début à la fin et indique, à chaque étape, les colonnes du jeu de données qui en sortent.
+
+```mermaid
+flowchart TD
+    subgraph AVANT["Avant la soirée"]
+        A["Inscription en ligne d'étudiants de Columbia"] --> B["<b>Questionnaire d'inscription</b><br/>âge, origine, études, loisirs, code postal d'enfance,<br/>100 points à répartir entre 6 critères<br/><i>colonnes age, race, field_cd, zipcode, attr1_1...</i>"]
+    end
+
+    subgraph SOIREE["Pendant la soirée : 21 vagues, de 10 à 44 participants"]
+        C["<b>Autant de femmes que d'hommes</b><br/>petite soirée : 5 à 10 dates chacun, condtn = 1<br/>grande soirée : 14 à 22 dates chacun, condtn = 2"] --> D["<b>Un date de 4 minutes</b>"]
+        D --> E["<b>Fiche de notation</b>, chacun de son côté<br/>décision oui ou non, 6 notes de 0 à 10<br/><i>colonnes dec, attr, sinc, intel, fun, amb, shar, like, prob</i><br/><i>suffixe _o : les réponses du partenaire</i>"]
+        E -->|"partenaire suivant"| D
+        E -.-> F["<b>Questionnaire de mi-soirée</b><br/>dans 12 vagues sur 21<br/><i>colonnes en _s</i>"]
+    end
+
+    subgraph APRES["Après la soirée"]
+        G{"Oui des<br/>deux côtés ?<br/><i>colonne match</i>"}
+        G -->|"oui : 16 % des dates"| H["Match : chacun reçoit<br/>l'adresse e-mail de l'autre"]
+        G -->|"non"| I["Pas de contact"]
+        H --> J["<b>Questionnaire du lendemain</b><br/>rempli par 88 % des participants<br/><i>colonnes en _2</i>"]
+        I --> J
+        J --> K["<b>Questionnaire à 3-4 semaines</b><br/>rempli par 48 % des participants<br/><i>colonnes en _3</i>"]
+    end
+
+    subgraph NOUS["Notre enrichissement"]
+        L["Code postal d'enfance<br/>des deux personnes"] --> M["<b>US Census, ACS 2017-2021</b><br/>revenu médian, Gini et population du quartier<br/><i>colonnes zip_median_income_2021, zip_gini_2021...</i>"]
+        M --> N["<b>Écart social entre les deux personnes</b><br/><i>colonnes diff_log_income_2021, abs_diff_gini_2021...</i>"]
+    end
+
+    B --> C
+    E -->|"fin de la soirée"| G
+    B -.->|"zipcode"| L
+
+    classDef ajout fill:#e3eefb,stroke:#2a78d6,color:#1b4f8f
+    class L,M,N ajout
+```
+
+Trois choses à retenir de ce protocole :
+
+- **Qui rencontre qui ne dépend pas des participants.** À l'intérieur d'une soirée, chaque femme rencontre chaque homme. Personne ne choisit ses partenaires : c'est ce qui rapproche ces données d'une expérience et permet de comparer les choix observés à ce que donnerait le hasard.
+- **La décision est prise juste après le date, sans connaître celle de l'autre.** `dec` mesure donc une préférence individuelle, alors que `match` dépend des deux personnes.
+- **Plus on s'éloigne de la soirée, moins les participants répondent.** La fiche de notation est remplie sur place par tout le monde, le questionnaire du lendemain par 88 % des participants et celui à trois semaines par 48 %. Le questionnaire de mi-soirée n'a été distribué que dans 12 vagues.
+
 ## Import des données
 
 ```r
