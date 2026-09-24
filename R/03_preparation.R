@@ -10,6 +10,7 @@
 # À lancer depuis la racine du dépôt : Rscript R/03_preparation.R
 
 library(tidyverse)
+source("R/commun.R")   # libellés du questionnaire (lab_race, lab_field) et libeller()
 
 dir.create("outputs", showWarnings = FALSE)
 
@@ -17,19 +18,7 @@ dir.create("outputs", showWarnings = FALSE)
 
 brut <- read_csv("data/speed_dating_census.csv", show_col_types = FALSE, guess_max = 10000)
 
-# --- 2. Libellés (dictionnaire des auteurs) ----------------------------------
-
-lab_race <- c("1" = "Noir", "2" = "Blanc", "3" = "Latino", "4" = "Asiatique", "6" = "Autre")
-lab_field <- c(
-  "1" = "Droit", "2" = "Mathématiques", "3" = "Sciences sociales, psychologie",
-  "4" = "Médecine, pharmacie, biotech", "5" = "Ingénierie", "6" = "Lettres, journalisme",
-  "7" = "Histoire, religion, philosophie", "8" = "Commerce, économie, finance",
-  "9" = "Éducation", "10" = "Biologie, chimie, physique", "11" = "Travail social",
-  "12" = "Indécis", "13" = "Science politique, relations internationales", "14" = "Cinéma",
-  "15" = "Beaux-arts", "16" = "Langues", "17" = "Architecture", "18" = "Autre"
-)
-
-# --- 3. Table des participants -----------------------------------------------
+# --- 2. Table des participants -----------------------------------------------
 
 # Les attributs individuels sont répétés sur chaque date : on en garde une ligne par iid
 participants <- brut |>
@@ -38,9 +27,9 @@ participants <- brut |>
     iid, wave,
     genre = factor(if_else(gender == 0, "Femme", "Homme")),
     age,
-    race = factor(recode(as.character(race), !!!lab_race)),
+    race = factor(libeller(race, lab_race)),
     field_cd,
-    domaine = factor(recode(as.character(field_cd), !!!lab_field)),
+    domaine = factor(libeller(field_cd, lab_field)),
     zip5,
     revenu_2000 = income_2000,
     revenu = zip_median_income_2021,
@@ -60,7 +49,7 @@ participants <- participants |>
   mutate(tercile_revenu = cut(revenu, c(-Inf, bornes_terciles, Inf),
                               labels = c("Modeste", "Intermédiaire", "Aisé")))
 
-# --- 4. Table des dates ------------------------------------------------------
+# --- 3. Table des dates ------------------------------------------------------
 
 # Variables du partenaire absentes de la table d'origine (domaine, revenu 2000,
 # tercile) : on les récupère par jointure sur pid
@@ -79,8 +68,8 @@ dates <- brut |>
     # Qui juge
     genre = factor(if_else(gender == 0, "Femme", "Homme")),
     age, age_o,
-    race = factor(recode(as.character(race), !!!lab_race)),
-    race_o = factor(recode(as.character(race_o), !!!lab_race)),
+    race = factor(libeller(race, lab_race)),
+    race_o = factor(libeller(race_o, lab_race)),
     samerace = samerace == 1,
     field_cd,
     int_corr,
@@ -118,7 +107,7 @@ dates <- brut |>
   ) |>
   select(-revenu_plafonne_o, -revenu_moe_rel, -revenu_moe_rel_o)
 
-# --- 5. Vérifications --------------------------------------------------------
+# --- 4. Vérifications --------------------------------------------------------
 
 stopifnot(
   nrow(dates) == 8378,
@@ -134,7 +123,7 @@ stopifnot(
     with(isTRUE(all.equal(ecart_revenu.x, ecart_revenu.y)))
 )
 
-# --- 6. Bilan de l'échantillon -----------------------------------------------
+# --- 5. Bilan de l'échantillon -----------------------------------------------
 
 cat("Dates :", nrow(dates), "| échantillon d'analyse :", sum(dates$echantillon),
     "| échantillon fiable :", sum(dates$echantillon_fiable), "\n")
@@ -157,7 +146,7 @@ cat("Lignes complètes pour le modèle avec contrôles et notes :",
 participants |> count(tercile_revenu)
 print(bornes_terciles)
 
-# --- 7. Export ---------------------------------------------------------------
+# --- 6. Export ---------------------------------------------------------------
 
 saveRDS(dates, "outputs/dates.rds")
 saveRDS(participants, "outputs/participants.rds")

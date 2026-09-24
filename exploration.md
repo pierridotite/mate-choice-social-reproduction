@@ -6,7 +6,7 @@ Ce document sert à comprendre le jeu de données avant de s'en servir. Il ne r�
 
 ## L'expérience en un schéma
 
-Les données viennent de 21 soirées de speed dating organisées par Fisman, Iyengar, Kamenica et Simonson entre 2002 et 2004 pour des étudiants de l'université Columbia. Le schéma suit un participant du début à la fin et indique, à chaque étape, les colonnes du jeu de données qui en sortent.
+Les données viennent de 21 soirées de speed dating organisées par Fisman, Iyengar, Kamenica et Simonson entre 2002 et 2004 pour des étudiants de master, de doctorat et des écoles professionnelles de l'université Columbia. Le schéma suit un participant du début à la fin et indique, à chaque étape, les colonnes du jeu de données qui en sortent.
 
 ```mermaid
 flowchart TD
@@ -15,7 +15,7 @@ flowchart TD
     end
 
     subgraph SOIREE["Pendant la soirée : 21 vagues, de 10 à 44 participants"]
-        C["<b>Autant de femmes que d'hommes</b><br/>petite soirée : 5 à 10 dates chacun, condtn = 1<br/>grande soirée : 14 à 22 dates chacun, condtn = 2"] --> D["<b>Un date de 4 minutes</b>"]
+        C["<b>Chaque femme rencontre chaque homme</b><br/>petite soirée : 5 à 10 dates chacun, condtn = 1<br/>grande soirée : 14 à 22 dates chacun, condtn = 2"] --> D["<b>Un date de 4 minutes</b>"]
         D --> E["<b>Fiche de notation</b>, chacun de son côté<br/>décision oui ou non, 6 notes de 0 à 10<br/><i>colonnes dec, attr, sinc, intel, fun, amb, shar, like, prob</i><br/><i>suffixe _o : les réponses du partenaire</i>"]
         E -->|"partenaire suivant"| D
         E -.-> F["<b>Questionnaire de mi-soirée</b><br/>dans 12 vagues sur 21<br/><i>colonnes en _s</i>"]
@@ -54,14 +54,15 @@ Trois choses à retenir de ce protocole :
 ```r
 library(tidyverse)
 library(patchwork)
+source("R/commun.R")   # charte graphique, formats et libellés partagés par les scripts
 
-dates <- read_csv("data/speed_dating_census.csv", show_col_types = FALSE, guess_max = 10000)
+brut <- read_csv("data/speed_dating_census.csv", show_col_types = FALSE, guess_max = 10000)
 
-dates <- dates |>
+dates <- brut |>
   mutate(
     genre = if_else(gender == 0, "Femmes", "Hommes"),
-    race_lab = recode(as.character(race), !!!lab_race),
-    field_lab = recode(as.character(field_cd), !!!lab_field),
+    race_lab = libeller(race, lab_race),
+    field_lab = libeller(field_cd, lab_field),
     census = !is.na(zip_median_income_2021),
     abs_diff_log_income = abs(diff_log_income_2021)
   )
@@ -70,9 +71,9 @@ dates <- dates |>
 participants <- dates |> distinct(iid, .keep_all = TRUE)
 ```
 
-On ne touche jamais aux fichiers de `data/` : tous les recodages sont faits dans le script et listés ci-dessus. Les variables du questionnaire sont codées par des entiers (`gender`, `race`, `field_cd`...), on leur donne des libellés à partir du dictionnaire des auteurs. `guess_max = 10000` évite que `read_csv` devine mal le type des colonnes presque vides.
+On ne touche jamais aux fichiers de `data/` : tous les recodages sont faits dans le script et listés ci-dessus. Les variables du questionnaire sont codées par des entiers (`gender`, `race`, `field_cd`...), on leur donne des libellés à partir du dictionnaire des auteurs, rangés dans [R/commun.R](R/commun.R) avec la charte graphique commune à tous les scripts. `guess_max = 10000` évite que `read_csv` devine mal le type des colonnes presque vides.
 
-Deux vérifications de structure sont faites dès l'import, avec `stopifnot()` : un couple orienté (`iid`, `pid`) n'apparaît qu'une fois, et `match` vaut bien `dec × dec_o`.
+Trois vérifications de structure sont faites dans le script, avec `stopifnot()` : un couple orienté (`iid`, `pid`) n'apparaît qu'une fois, `match` vaut bien `dec × dec_o`, et chaque femme a autant de dates qu'il y a d'hommes dans sa vague.
 
 ## Why
 
@@ -86,7 +87,7 @@ L'homogamie : le fait de choisir un partenaire du même milieu que soi. Ici on p
 
 ### Quelles actions et cibles pour la visualisation ?
 
-On veut **résumer** des distributions (âge, revenu du quartier, taux de oui), **comparer** des groupes (femmes et hommes, participants avec et sans données Census), **explorer des relations** (note donnée et décision, écart social et décision) et **repérer des anomalies** (colonnes vides, valeurs plafonnées, échelles qui changent d'une vague à l'autre). Ces graphiques sont faits pour nous : ils privilégient la lecture exacte à l'effet visuel.
+On veut **résumer** des distributions (âge, revenu du quartier, taux de oui), **comparer** des groupes (femmes et hommes, participants avec et sans données Census), **explorer des relations** (note donnée et décision, écart social et décision) et **repérer des anomalies** (colonnes vides, valeurs plafonnées, codages incohérents). Ces graphiques sont faits pour nous : ils privilégient la lecture exacte à l'effet visuel.
 
 ## What
 
@@ -142,11 +143,11 @@ Un diagramme en barres groupées, la vague en abscisse et la couleur pour le gen
 
 Un point par colonne, positionné selon son taux de valeurs manquantes, et les colonnes regroupées par moment de collecte. Les groupes sont triés du plus complet au plus incomplet, pour que la hiérarchie se lise de bas en haut.
 
-Le cœur de l'expérience est presque complet : `dec` n'a aucun manquant, les notes en ont entre 2 % et 4 %, sauf l'ambition (`amb`, 9 %) et les intérêts communs (`shar`, 13 %), plus difficiles à juger en quatre minutes. 84 % des dates ont les six notes renseignées. À l'inverse, les questionnaires de suivi sont inutilisables : la moitié des colonnes du suivi à trois semaines dépassent 65 % de manquants. Dans le questionnaire d'inscription, quelques colonnes sont aussi très vides : `expnum` (79 %), `mn_sat` (63 %), `tuition` (57 %), `undergra` (41 %).
+Le cœur de l'expérience est presque complet : `dec` n'a aucun manquant, les notes en ont entre 2 % et 4 %, sauf l'ambition (`amb`, 9 %) et les intérêts communs (`shar`, 13 %), plus difficiles à juger en quatre minutes. 84 % des dates ont les six notes renseignées. À l'inverse, les questionnaires de suivi sont inutilisables : le taux médian de manquants est de 31 % pour le suivi du lendemain et de 65 % pour celui à trois semaines. Le questionnaire de mi-soirée manque dans 51 % des lignes, simplement parce qu'il n'a été distribué que dans 12 vagues sur 21. Dans le questionnaire d'inscription, quelques colonnes sont aussi très vides : `expnum` (79 %), `mn_sat` (63 %), `tuition` (57 %), `undergra` (41 %).
 
 Le point important pour nous : **`income`, la mesure du milieu social fournie par les auteurs, manque dans 49 % des lignes**. C'est la raison d'être de notre enrichissement. Avec le Census, le taux de manquants du revenu tombe à 28 %.
 
-Autre piège repéré : `met` (« avez-vous déjà rencontré cette personne ? ») contient des valeurs de 0 à 8 alors qu'elle devrait être binaire. On ne l'utilisera pas sans recodage.
+Autre piège repéré : `met` (« avez-vous déjà rencontré cette personne ? ») devrait valoir 1 (oui) ou 2 (non), mais près de la moitié des lignes valent 0 et quelques-unes vont jusqu'à 8. On ne l'utilisera pas.
 
 ### Visualisation 3 : le profil des participants
 
@@ -154,7 +155,7 @@ Autre piège repéré : `met` (« avez-vous déjà rencontré cette personne ? �
 
 Histogrammes pour l'âge, barres horizontales triées pour les variables catégorielles. Les barres sont en gris neutre car aucune modalité n'est à mettre en avant ; la valeur est écrite au bout de la barre, ce qui permet de supprimer l'axe.
 
-Les participants ont 26 ans en moyenne (de 18 à 55 ans, une seule personne au-delà de 42 ans). 56 % se déclarent blancs et 25 % asiatiques. Un quart étudie le commerce, l'économie ou la finance. C'est une population très particulière : des étudiants de troisième cycle d'une université d'élite. **La sélection sociale a déjà eu lieu avant la soirée**, ce qui réduit mécaniquement les écarts de milieu que l'on pourra observer.
+Les participants ont 26 ans en moyenne (de 18 à 55 ans, une seule personne au-delà de 42 ans). 56 % se déclarent blancs et 25 % asiatiques. Un quart étudie le commerce, l'économie ou la finance. C'est une population très particulière : des étudiants de master, de doctorat ou d'écoles professionnelles d'une université d'élite. **La sélection sociale a déjà eu lieu avant la soirée**, ce qui réduit mécaniquement les écarts de milieu que l'on pourra observer.
 
 ### Visualisation 4 : la variable réponse
 
@@ -174,17 +175,17 @@ Un panneau par critère, la note en abscisse, le taux de oui en ordonnée sur un
 
 L'attirance physique est le critère le plus discriminant : le taux de oui passe de 8 % pour une note de 4 ou moins à 76 % pour une note de 8 ou plus (+68 points). Viennent ensuite l'humour (+58) et les intérêts communs (+54), loin devant l'intelligence (+40), la sincérité (+35) et l'ambition (+31), dont les courbes plafonnent autour de 50 %. Les courbes des hommes sont presque partout au-dessus de celles des femmes : à note égale, ils disent plus souvent oui.
 
-Attention, ces six notes ne sont pas six informations indépendantes. Elles sont corrélées entre elles (de 0,36 à 0,66), signe d'un effet de halo : quelqu'un qui plaît est jugé meilleur sur tout. Il faudra en tenir compte si on les met ensemble dans un modèle. Le point isolé à 41 % pour la note 0 en « intérêts communs » chez les hommes est un artefact d'un petit effectif.
+Attention, ces six notes ne sont pas six informations indépendantes. Elles sont corrélées entre elles (de 0,36 à 0,66), signe d'un effet de halo : quelqu'un qui plaît est jugé meilleur sur tout. Il faudra en tenir compte si on les met ensemble dans un modèle. Le point isolé à 42 % pour la note 0 en « intérêts communs » chez les hommes ne repose que sur 24 dates (18 juges) : il ne faut pas le surinterpréter.
 
 ### Visualisation 6 : les variables Census
 
 ![Distribution du revenu médian du quartier d'enfance et validation par le revenu 2000](outputs/exploration/06_census.png)
 
-À gauche, deux densités superposées sur une échelle logarithmique : le revenu est une variable asymétrique, et c'est le rapport entre deux revenus qui a du sens, pas leur différence. À droite, un nuage de points en échelle log-log avec une droite de régression.
+À gauche, deux densités superposées sur une échelle logarithmique : le revenu est une variable asymétrique, et c'est le rapport entre deux revenus qui a du sens, pas leur différence. Pour comparer des personnes à des personnes, chaque code postal américain pèse selon son nombre d'habitants ; sans cette pondération, les petits codes postaux ruraux compteraient autant que les grands codes postaux urbains. L'axe est cadré entre 18 000 et 260 000 $, où se trouve l'essentiel de la distribution. À droite, un nuage de points en échelle log-log avec une droite de régression.
 
-394 participants sur 551 ont un revenu Census. Leurs quartiers d'enfance sont bien plus aisés que la moyenne : le revenu médian y est de 103 000 $, contre 61 000 $ pour l'ensemble des codes postaux américains. La distribution a deux bosses, vers 65 000 $ et vers 130 000 $. Quatre participants viennent de quartiers au plafond du Census (250 001 $, valeur censurée).
+394 participants sur 551 ont un revenu Census. Leurs quartiers d'enfance sont bien plus aisés que ceux où vivent les Américains : le revenu médian y est de 103 000 $, contre 68 000 $ pour la population des États-Unis. Seuls 15 % des Américains vivent dans un code postal plus aisé que le quartier d'enfance médian des participants. La distribution des participants présente un épaulement vers 65 000 $ et un pic vers 130 000 $. Quatre participants viennent de quartiers au plafond du Census (250 001 $, valeur censurée), ce qui explique que leur courbe s'arrête net à droite.
 
-Le graphique de droite valide la mesure : sur les 281 participants qui ont les deux, le revenu 2021 est corrélé à 0,85 avec le revenu 2000 fourni par les auteurs. Les niveaux ont changé en vingt ans, mais le classement des quartiers est conservé, et c'est lui qui compte pour mesurer un écart. Quelques points au-dessus de la droite sont des quartiers qui se sont fortement enrichis.
+Le graphique de droite valide la mesure : sur les 281 participants qui ont les deux, la corrélation de rang (Spearman) entre le revenu 2021 et le revenu 2000 fourni par les auteurs est de 0,84. Les niveaux ont changé en vingt ans, mais le classement des quartiers est conservé, et c'est lui qui compte pour mesurer un écart. Quelques points au-dessus de la droite sont des quartiers qui se sont fortement enrichis.
 
 ### Visualisation 7 : qui perd-on faute de code postal ?
 
@@ -192,7 +193,9 @@ Le graphique de droite valide la mesure : sur les 281 participants qui ont les d
 
 Un graphique en haltères : pour chaque indicateur, un point par groupe sur un axe commun partant de zéro, reliés par un segment dont la longueur donne l'écart. Le groupe sans données est en rouge pour qu'il ressorte.
 
-157 participants n'ont pas de données Census, dont 125 qui n'ont pas renseigné de code postal américain : leur lieu d'origine déclaré est souvent un pays étranger (Inde, Chine, Israël, Espagne...). Ce groupe n'est pas un échantillon au hasard. Il compte 37 % de femmes contre 55 % chez les autres, plus d'Asiatiques (31 % contre 23 %), et ses membres disent plus souvent oui (48 % contre 41 %) tout en en recevant moins (37 % contre 45 %).
+157 participants n'ont pas de données Census, dont 125 qui n'ont pas renseigné de code postal américain : leur lieu d'origine déclaré est souvent un pays étranger (Inde, Chine, Israël, Espagne...). Ce groupe n'est pas un échantillon au hasard. Il compte 37 % de femmes contre 55 % chez les autres et 46 % de Blancs contre 59 %. Ses membres disent plus souvent oui (48 % contre 41 %) et en reçoivent moins (37 % contre 45 %). Ces quatre écarts sont significatifs au seuil de 1 % (test du khi-deux pour les proportions, test de Student pour les taux de oui). L'écart sur la part d'Asiatiques (31 % contre 23 %) ne l'est pas (p = 0,08).
+
+Le déficit de oui reçus ne s'explique pas seulement par la plus forte proportion d'hommes, qui reçoivent moins de oui que les femmes : il se retrouve à genre égal (41 % contre 50 % chez les femmes, 35 % contre 39 % chez les hommes).
 
 Nos conclusions porteront donc sur les participants **qui ont grandi aux États-Unis**. C'est une limite à annoncer, mais elle est cohérente avec la question : le quartier d'enfance comme marqueur social n'a de sens qu'à l'intérieur d'un même pays.
 
@@ -200,18 +203,20 @@ Nos conclusions porteront donc sur les participants **qui ont grandi aux États-
 
 ![Distribution de l'écart de revenu entre partenaires et taux de oui par quintile d'écart](outputs/exploration/08_ecart_social.png)
 
-L'écart est mesuré par `|diff_log_income_2021|`, que l'on relit comme un rapport : « × 2 » veut dire que l'un des deux quartiers a un revenu médian deux fois plus élevé que l'autre. À gauche, l'histogramme de cet écart. À droite, le taux de oui par quintile d'écart, avec le taux moyen en pointillé comme référence.
+L'écart est mesuré par `|diff_log_income_2021|`, que l'on relit comme un rapport : « × 2 » veut dire que l'un des deux quartiers a un revenu médian deux fois plus élevé que l'autre. À gauche, l'histogramme de cet écart, avec une ligne par rencontre : les deux lignes d'une même rencontre ont le même écart, les garder toutes les deux compterait chaque rencontre deux fois. À droite, le taux de oui par quintile d'écart, calculé sur les décisions, avec le taux moyen en pointillé comme référence.
 
-Seuls 4 424 dates sur 8 378 (53 %) ont le revenu des deux personnes. L'écart médian est de × 1,5, un quart des dates dépassent × 2,1 et le maximum atteint × 8,6 : malgré la sélection sociale de Columbia, il y a de la variabilité à exploiter.
+Seules 4 424 décisions sur 8 378 (53 %), soit 2 212 rencontres, ont le revenu des deux personnes. L'écart médian est de × 1,5, un quart des rencontres dépassent × 2,1 et le maximum atteint × 8,6 : malgré la sélection sociale de Columbia, il y a de la variabilité à exploiter.
 
-Le premier regard ne montre **aucun gradient** : le taux de oui vaut 42 %, 44 %, 45 %, 42 % et 42 % du quintile le plus proche au plus éloigné. Deux réserves avant d'en tirer une conclusion. Les intervalles de confiance affichés sont naïfs : ils ignorent la répétition des personnes et sont donc trop étroits. Et ce graphique ne contrôle rien : si les personnes issues de quartiers riches sont à la fois plus éloignées des autres et plus populaires, deux effets peuvent se compenser.
+Le premier regard ne montre **aucun gradient** : le taux de oui vaut 42 %, 44 %, 45 %, 42 % et 42 % du quintile le plus proche au plus éloigné. Les barres sont des intervalles de confiance à 95 % obtenus par bootstrap sur les juges : on tire des participants avec remise et on garde toutes leurs décisions, ce qui respecte le fait qu'un même juge décide une quinzaine de fois. Un intervalle binomial classique, qui traiterait chaque ligne comme indépendante, serait trop étroit. Tous les intervalles recouvrent le taux moyen.
+
+Ce graphique ne contrôle rien pour autant : si les personnes issues de quartiers riches étaient à la fois plus éloignées des autres et plus populaires, deux effets pourraient se compenser. C'est le rôle des modèles de le vérifier.
 
 ## Perspectives
 
 ### Ce que l'exploration impose pour la suite
 
 - **Variable réponse** : `dec`, complète et interprétable comme une préférence individuelle. `match` mélange les préférences des deux personnes.
-- **Échantillon d'analyse** : les 4 424 dates où le revenu du quartier est connu des deux côtés, en annonçant que les participants ayant grandi à l'étranger en sont exclus.
+- **Échantillon d'analyse** : les 4 424 dates où le revenu du quartier est connu des deux côtés, en annonçant que les participants sans code postal américain, pour la plupart ayant grandi à l'étranger, en sont exclus.
 - **Mesure de l'écart social** : la valeur absolue de l'écart de log-revenu. Le revenu 2000 des auteurs servira de test de robustesse, sur un échantillon plus petit.
 - **Variables à écarter** : les questionnaires de suivi (`_2`, `_3`), `expnum`, `mn_sat`, `tuition`, `undergra` et `met`.
 - **Valeurs particulières** : quatre quartiers au plafond de 250 001 $ ; une participante de 55 ans ; les petites vagues (6, 18, 20) qui apportent très peu de lignes.
@@ -221,3 +226,5 @@ Le premier regard ne montre **aucun gradient** : le taux de oui vaut 42 %, 44 %,
 Une régression logistique de `dec` sur l'écart social, puis avec des contrôles (`samerace`, écart d'âge, même domaine d'études, `int_corr`), puis avec les notes. La visualisation 4 montre que les décisions d'une même personne se ressemblent beaucoup : il faut un modèle mixte avec un effet aléatoire pour le juge (`iid`) et un pour le partenaire (`pid`), ou au minimum le signaler comme limite d'un `glm` classique.
 
 La visualisation 8 suggère que l'effet brut est faible ou nul. Trois pistes pour aller plus loin que ce constat : regarder l'écart **signé** plutôt qu'absolu (préfère-t-on quelqu'un d'un milieu plus aisé que le sien ?), séparer femmes et hommes, et vérifier si le niveau de revenu du quartier du partenaire joue à lui seul sur sa popularité.
+
+Ces modèles sont présentés dans [modeles.md](modeles.md).
