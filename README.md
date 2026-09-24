@@ -7,9 +7,9 @@ US Census income and inequality data from participants' childhood ZIP codes.
 
 Data science project, M2 Data Science, L'Institut Agro Montpellier (2026–2027).
 
-> **Status: exploration.** The dataset is built and documented, and a first exploratory analysis is in
-> [exploration.md](exploration.md). The models, the Shiny app and the slides are not written yet; the
-> sections below describe the planned structure.
+> **Status: analysis dataset ready.** The dataset is built and documented, a first exploratory analysis is in
+> [exploration.md](exploration.md) and the analysis sample is fixed. The models, the Shiny app and the slides
+> are not written yet; the sections below describe the planned structure.
 
 ## Research question
 
@@ -44,7 +44,8 @@ The enriched dataset is also published on Kaggle:
 ```
 ├── R/                  analysis scripts, run in order
 │   ├── 01_jointure_census.R    builds data/ from data-raw/
-│   └── 02_exploration.R        exploratory figures
+│   ├── 02_exploration.R        exploratory figures
+│   └── 03_preparation.R        analysis dataset -> outputs/dates.rds, participants.rds
 ├── exploration.md      exploratory data analysis (in French), figures and commentary
 ├── data-raw/           raw inputs (Census .dat files are not versioned, see data-raw/README.md)
 ├── data/               enriched dataset + its documentation
@@ -65,7 +66,7 @@ loads results and stays responsive.
 |---|---|---|
 | `01_jointure_census.R` | ZIP cleaning and join with Census tables | done |
 | `02_exploration.R` | Structure, missing data, key variables, first look at the social gap; written up in [exploration.md](exploration.md) | done |
-| `03_preparation.R` | Derived variables, analysis sample | planned |
+| `03_preparation.R` | Derived variables (signed and absolute social gap, age gap, same field, income terciles), analysis sample of 4,424 dates, robustness sample of 4,128 | done |
 | `04_modeles.R` | Mixed-effects logistic regressions on `dec`, random effects for rater and partner, nested models M1–M4 | planned |
 | `05_robustesse.R` | Income 2000 instead of 2021, within-event permutation test, noisy ZIP areas excluded, signed gap | planned |
 
