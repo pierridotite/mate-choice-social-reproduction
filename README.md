@@ -7,9 +7,9 @@ US Census income and inequality data from participants' childhood ZIP codes.
 
 Data science project, M2 Data Science, L'Institut Agro Montpellier (2026–2027).
 
-> **Status: analysis dataset ready.** The dataset is built and documented, a first exploratory analysis is in
-> [exploration.md](exploration.md) and the analysis sample is fixed. The models, the Shiny app and the slides
-> are not written yet; the sections below describe the planned structure.
+> **Status: models fitted.** The dataset is built and documented, the exploratory analysis is in
+> [exploration.md](exploration.md) and the models are in [modeles.md](modeles.md). The robustness checks, the
+> Shiny app and the slides are not written yet; the sections below describe the planned structure.
 
 ## Research question
 
@@ -43,13 +43,16 @@ The enriched dataset is also published on Kaggle:
 
 ```
 ├── R/                  analysis scripts, run in order
+│   ├── commun.R                shared chart theme, formats and labels (sourced by 02 to 04)
 │   ├── 01_jointure_census.R    builds data/ from data-raw/
-│   ├── 02_exploration.R        exploratory figures
-│   └── 03_preparation.R        analysis dataset -> outputs/dates.rds, participants.rds
+│   ├── 02_exploration.R        exploratory figures -> outputs/exploration/
+│   ├── 03_preparation.R        analysis dataset -> outputs/dates.rds, participants.rds
+│   └── 04_modeles.R            mixed logistic models -> outputs/modeles.rds, outputs/modeles/
 ├── exploration.md      exploratory data analysis (in French), figures and commentary
+├── modeles.md          models and first answer to the research question (in French)
 ├── data-raw/           raw inputs (Census .dat files are not versioned, see data-raw/README.md)
 ├── data/               enriched dataset + its documentation
-├── outputs/            figures (exploration/) and pre-computed results (.rds) loaded by the app
+├── outputs/            figures and pre-computed results (.rds) loaded by the app
 ├── app/                Shiny app
 │   ├── modules/        one module per tab
 │   └── www/            static assets
@@ -60,34 +63,43 @@ The enriched dataset is also published on Kaggle:
 Scripts compute, the app displays: models are fitted offline and saved to `outputs/`, so the app only
 loads results and stays responsive.
 
-### Planned scripts
+### Scripts
 
 | Script | Role | Status |
 |---|---|---|
 | `01_jointure_census.R` | ZIP cleaning and join with Census tables | done |
 | `02_exploration.R` | Structure, missing data, key variables, first look at the social gap; written up in [exploration.md](exploration.md) | done |
 | `03_preparation.R` | Derived variables (signed and absolute social gap, age gap, same field, income terciles), analysis sample of 4,424 dates, robustness sample of 4,128 | done |
-| `04_modeles.R` | Mixed-effects logistic regressions on `dec`, random effects for rater and partner, nested models M1–M4 | planned |
-| `05_robustesse.R` | Income 2000 instead of 2021, within-event permutation test, noisy ZIP areas excluded, signed gap | planned |
+| `04_modeles.R` | Mixed-effects logistic regressions on `dec`, random effects for rater and partner, nested models M1–M4, written up in [modeles.md](modeles.md) | done |
+| `05_robustesse.R` | Same models with income 2000 instead of 2021, without top-coded or noisy ZIP areas, with the Gini gap and with same income tercile | planned |
 
 ### Planned app
 
 | Part | Tabs |
 |---|---|
-| **1. Interactive descriptive analysis** | The data · The participants · Who says yes? · Social homophily |
-| **2. In-depth analysis** | Models · Simulator · Robustness |
+| **1. Interactive descriptive analysis** | The data · The participants · Who says yes? · Social gap |
+| **2. Model results** | Social gap across models · Other similarities · Predicted probabilities |
 
 ## Reproducing
 
-All paths are relative to the repository root. Open `mate-choice-social-reproduction.Rproj` in RStudio,
-or run from the root:
+Developed with R 4.6.1. Required packages: `tidyverse`, `patchwork`, `lme4`.
 
-```bash
-Rscript R/01_jointure_census.R
+```r
+install.packages(c("tidyverse", "patchwork", "lme4"))
 ```
 
-This step needs the raw Census tables, see [data-raw/README.md](data-raw/README.md). It can be skipped:
-`data/` is versioned.
+All paths are relative to the repository root. Open `mate-choice-social-reproduction.Rproj` in RStudio,
+or run from the root, in this order:
+
+```bash
+Rscript R/01_jointure_census.R   # optional: needs the raw Census tables
+Rscript R/02_exploration.R
+Rscript R/03_preparation.R
+Rscript R/04_modeles.R           # about 2 minutes
+```
+
+The first step needs the raw Census tables, see [data-raw/README.md](data-raw/README.md). It can be
+skipped: `data/` is versioned. Rerunning it reproduces the files of `data/` exactly.
 
 ## Authors
 
