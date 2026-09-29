@@ -1,0 +1,18 @@
+/* Parcours « Découvrir les données » */
+.parcours h3 { margin-top: 4px; }
+.parcours h5 { margin-top: 30px; margin-bottom: 4px; font-weight: 600; }
+.parcours .intro { color: #52514e; max-width: 900px; }
+.parcours .lecture { color: #52514e; font-size: 0.88rem; margin-bottom: 4px; }
+.parcours .resume { color: #52514e; font-size: 0.9rem; margin-top: 4px; }
+.a-retenir {
+  background: #f1f6fd; border-left: 4px solid #2a78d6; border-radius: 4px;
+  padding: 12px 18px; margin: 26px 0 30px; max-width: 980px;
+}
+.a-retenir ul { margin: 6px 0 0; padding-left: 20px; }
+.a-retenir li { margin-bottom: 4px; }
+.chiffre-cle { background: #f7f7f5; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; }
+.chiffre-cle .valeur { font-size: 1.55rem; font-weight: 700; color: #1b1b19; line-height: 1.2; }
+.chiffre-cle .libelle { font-size: 0.82rem; color: #52514e; }
+.conclusion { border: 1px solid #e1e0d9; border-radius: 6px; padding: 12px 16px; margin-bottom: 14px; }
+.conclusion h6 { font-weight: 700; margin-bottom: 4px; }
+.conclusion p { margin-bottom: 0; color: #3a3935; }
