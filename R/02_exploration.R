@@ -77,22 +77,8 @@ sauver(fig_vagues, file.path(dir_fig, "01_vagues.png"), height = 4.8)
 # --- 3. Données manquantes ---------------------------------------------------
 
 # Les 217 colonnes viennent de questionnaires remplis à des moments différents :
-# on regroupe les colonnes par moment de collecte pour lire les manquants par bloc
-bloc_colonne <- function(nom) {
-  case_when(
-    str_detect(nom, "census|zip_|zip5|diff_|income_2000") ~ "Census (notre ajout)",
-    str_detect(nom, "_3$") | nom %in% c("you_call", "them_cal") ~ "Suivi à 3-4 semaines",
-    str_detect(nom, "_2$") | nom == "length" ~ "Suivi le lendemain",
-    str_detect(nom, "_s$") ~ "Mi-soirée",
-    nom %in% c("dec", "attr", "sinc", "intel", "fun", "amb", "shar", "like", "prob",
-               "met", "match_es") ~ "Fiche de notation (après chaque date)",
-    str_detect(nom, "_o$|^pf_o_") ~ "Réponses du partenaire (_o)",
-    nom %in% c("iid", "id", "gender", "idg", "condtn", "wave", "round", "position", "positin1",
-               "order", "partner", "pid", "match", "int_corr", "samerace") ~ "Protocole",
-    TRUE ~ "Questionnaire d'inscription"
-  )
-}
-
+# on les regroupe par moment de collecte (bloc_colonne(), dans R/commun.R) pour lire
+# les manquants par bloc
 manquants <- tibble(
   colonne = names(brut),
   taux_na = map_dbl(brut, \(x) mean(is.na(x)))

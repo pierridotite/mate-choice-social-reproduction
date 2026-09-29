@@ -170,7 +170,7 @@ fig_trajectoire <- trajectoire |>
   geom_vline(xintercept = 1, colour = col_dark, linewidth = 0.5) +
   geom_pointrange(aes(xmin = rc_bas, xmax = rc_haut, colour = naif),
                   size = 0.6, linewidth = 1) +
-  geom_text(aes(label = paste0("× ", virgule(rc))), nudge_y = 0.3, size = 3.3, colour = col_dark) +
+  etiquette_rc() +
   scale_colour_manual(values = c("FALSE" = col_accent, "TRUE" = col_neutre), guide = "none") +
   scale_x_log10(breaks = c(0.6, 0.8, 1, 1.25, 1.5), labels = \(x) virgule(x, 2),
                 limits = c(0.55, 1.6)) +
@@ -218,7 +218,7 @@ fig_effets <- effets_m2 |>
   ggplot(aes(x = rc, y = libelle)) +
   geom_vline(xintercept = 1, colour = col_dark, linewidth = 0.5) +
   geom_pointrange(aes(xmin = rc_bas, xmax = rc_haut, colour = social), size = 0.6, linewidth = 1) +
-  geom_text(aes(label = paste0("× ", virgule(rc))), nudge_y = 0.3, size = 3.3, colour = col_dark) +
+  etiquette_rc() +
   scale_colour_manual(values = c("TRUE" = col_femme, "FALSE" = col_accent), guide = "none") +
   scale_x_log10(breaks = c(0.5, 0.75, 1, 1.5, 2, 3), labels = \(x) virgule(x, 2)) +
   labs(

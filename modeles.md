@@ -129,11 +129,11 @@ On pourrait imaginer que l'effet de l'écart soit masqué par une préférence p
 | Écart de revenu : rapport de 2 plutôt que revenus égaux | 0,86 (0,65 à 1,14) | 1,03 (0,79 à 1,35) |
 | Revenu du quartier du partenaire : deux fois plus élevé | 1,01 (0,68 à 1,48) | 1,09 (0,78 à 1,52) |
 
-Avec le revenu 2021, on ne retrouve pas le résultat de Fisman et al. (2006), selon lequel les femmes préfèrent les hommes qui ont grandi dans des quartiers aisés. Les auteurs utilisaient le revenu 2000 et un modèle différent : le test de robustesse devra refaire M4 avec cette mesure avant de conclure à une divergence.
+Avec le revenu 2021, on ne retrouve pas le résultat de Fisman et al. (2006), selon lequel les femmes préfèrent les hommes qui ont grandi dans des quartiers aisés. Les auteurs utilisaient le revenu 2000 : les tests de robustesse ([robustesse.md](robustesse.md)) refont l'analyse avec cette mesure, et avec une spécification plus simple, sans voir apparaître cette préférence.
 
-## Réponse provisoire à la problématique
+## Réponse à la problématique
 
-**Dans cette expérience, le choix du partenaire ne suit pas le milieu social d'origine mesuré par le revenu du quartier.** On ne détecte ni préférence pour ceux qui ont grandi dans un quartier semblable au sien, ni préférence pour ceux qui viennent d'un quartier aisé. En revanche, les participants choisissent davantage des partenaires du même domaine d'études, de la même origine et d'un âge proche.
+**Dans cette expérience, le choix du partenaire ne suit pas le milieu social d'origine mesuré par le revenu du quartier.** On ne détecte ni préférence pour ceux qui ont grandi dans un quartier semblable au sien, ni préférence pour ceux qui viennent d'un quartier aisé, et ce résultat résiste aux tests de robustesse (voir plus bas). En revanche, les participants choisissent davantage des partenaires du même domaine d'études, de la même origine et d'un âge proche.
 
 Cela ne veut pas dire que la reproduction sociale est absente. Tous les participants sont étudiants à Columbia : la sélection sociale a eu lieu **avant la soirée**, à l'entrée dans l'université. Une fois dans ce milieu, les écarts d'origine qui subsistent ne pèsent plus sur le choix, alors que les ressemblances de parcours (le domaine d'études) pèsent encore. C'est cohérent avec l'idée, classique en sociologie de la famille, que l'homogamie se fait d'abord par les lieux de rencontre plutôt que par les préférences individuelles.
 
@@ -146,13 +146,8 @@ Cela ne veut pas dire que la reproduction sociale est absente. Tous les particip
 - **Les deux décisions d'une même rencontre ne sont pas indépendantes** : une attirance réciproque peut exister au-delà de ce qu'expliquent les effets juge et partenaire. Le modèle ne l'intègre pas.
 - **Les probabilités de la figure 3 concernent une personne typique**, pas la moyenne de la population. Les intervalles de confiance sont des intervalles de Wald.
 
-## Suite
+## Robustesse
 
-Le script `R/05_robustesse.R` refera M2 et M4 avec d'autres mesures et d'autres échantillons, pour vérifier que la conclusion ne tient pas à un choix particulier :
+[robustesse.md](robustesse.md) réajuste M2 en changeant un choix à la fois : échantillon sans exiger les notes, sans les quartiers mal mesurés, revenu 2000 à la place du revenu 2021, écart d'indice de Gini, appartenance au même tercile de revenu. Aucune variante ne fait apparaître d'effet de l'écart social : les rapports de cotes restent entre 0,91 et 1,01. La préférence pour les partenaires issus de quartiers aisés n'apparaît pas non plus avec le revenu 2000.
 
-- le revenu 2000 fourni par les auteurs à la place du revenu 2021 ;
-- l'échantillon sans quartiers plafonnés ni quartiers à forte marge d'erreur (4 128 dates) ;
-- l'écart de Gini à la place de l'écart de revenu ;
-- le fait d'appartenir au même tercile de revenu plutôt qu'un écart continu.
-
-Les résultats de `outputs/modeles.rds` (coefficients, matrices de variance, prédictions) sont prêts à être chargés par l'application Shiny, sans réajuster les modèles.
+Les résultats de `outputs/modeles.rds` et `outputs/robustesse.rds` (coefficients, matrices de variance, prédictions) sont prêts à être chargés par l'application Shiny, sans réajuster les modèles.

@@ -1,5 +1,5 @@
 # Éléments communs aux scripts du projet : charte graphique, formats et libellés.
-# Ce fichier n'est pas lancé seul : les scripts 02 à 04 le chargent avec source("R/commun.R").
+# Ce fichier n'est pas lancé seul : les scripts 02 à 05 et l'application le chargent avec source().
 
 library(ggplot2)
 
@@ -16,6 +16,11 @@ col_muted <- "#898781"
 col_grid <- "#e1e0d9"
 
 couleurs_genre <- c("Femmes" = col_femme, "Hommes" = col_homme)
+
+# Palette catégorielle : ordre fixe, validé pour les daltoniens (les deux premières couleurs
+# sont celles des genres). Au-delà de 8 modalités, on regroupe dans « Autres », en gris.
+palette_categorielle <- c("#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+                          "#e87ba4", "#008300", "#4a3aa7", "#e34948")
 
 theme_projet <- function(base_size = 12) {
   theme_minimal(base_size = base_size) +
@@ -49,6 +54,14 @@ sauver <- function(plot, fichier, width = 9, height = 5.5) {
   ggsave(fichier, plot = plot, width = width, height = height, dpi = 300)
 }
 
+# Valeur d'un rapport de cotes (« × 0,94 ») écrite au-dessus du point, sur fond blanc pour
+# rester lisible quand elle croise la ligne verticale de référence
+etiquette_rc <- function(nudge_y = 0.3) {
+  geom_label(aes(label = paste0("× ", virgule(rc))), nudge_y = nudge_y, size = 3.3,
+             colour = col_dark, fill = "white", border.colour = NA,
+             label.padding = unit(0.1, "lines"))
+}
+
 # --- Formats à la française --------------------------------------------------
 
 pourcent <- scales::label_percent(accuracy = 1, suffix = " %")
@@ -78,3 +91,20 @@ lab_notes <- c(
 
 # Remplace des codes numériques par leur libellé (NA si le code est absent)
 libeller <- function(code, libelles) unname(libelles[as.character(code)])
+
+# Moment de collecte d'une colonne du jeu de données : les 217 colonnes viennent de
+# questionnaires remplis à des moments différents
+bloc_colonne <- function(nom) {
+  dplyr::case_when(
+    stringr::str_detect(nom, "census|zip_|zip5|diff_|income_2000") ~ "Census (notre ajout)",
+    stringr::str_detect(nom, "_3$") | nom %in% c("you_call", "them_cal") ~ "Suivi à 3-4 semaines",
+    stringr::str_detect(nom, "_2$") | nom == "length" ~ "Suivi le lendemain",
+    stringr::str_detect(nom, "_s$") ~ "Mi-soirée",
+    nom %in% c("dec", "attr", "sinc", "intel", "fun", "amb", "shar", "like", "prob",
+               "met", "match_es") ~ "Fiche de notation (après chaque date)",
+    stringr::str_detect(nom, "_o$|^pf_o_") ~ "Réponses du partenaire (_o)",
+    nom %in% c("iid", "id", "gender", "idg", "condtn", "wave", "round", "position", "positin1",
+               "order", "partner", "pid", "match", "int_corr", "samerace") ~ "Protocole",
+    TRUE ~ "Questionnaire d'inscription"
+  )
+}
