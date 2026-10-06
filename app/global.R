@@ -11,6 +11,32 @@ library(DT)
 
 # Chargement des fonctions
 source("../R/commun.R")            # charte graphique, formats, libellés du questionnaire
+
+palette_amour <- c(
+  fond = "#FBF3F1",
+  texte = "#2B1A1F",
+  rouge = "#B3123B",
+  rose_vif = "#E8517A",
+  rose_doux = "#F4C9D2",
+  gris_rose = "#E8DEDE",
+  prune = "#5C3D6E"
+)
+col_femme <- palette_amour[["rose_vif"]]
+col_homme <- palette_amour[["prune"]]
+col_accent <- palette_amour[["rouge"]]
+col_alerte <- palette_amour[["rouge"]]
+col_neutre <- palette_amour[["gris_rose"]]
+col_dark <- palette_amour[["texte"]]
+col_muted <- "#725E63"
+col_grid <- palette_amour[["gris_rose"]]
+couleurs_genre <- c("Femmes" = col_femme, "Hommes" = col_homme)
+theme_set(theme_projet() + theme(
+  text = element_text(family = "Plus Jakarta Sans"),
+  plot.title = element_text(family = "Lora"),
+  plot.background = element_rect(fill = palette_amour[["fond"]], colour = NA),
+  panel.background = element_rect(fill = palette_amour[["fond"]], colour = NA)
+))
+
 source("fonctions/donnees.R")      # tables et dictionnaire des variables
 source("fonctions/decouverte.R")   # onglet « Découvrir les données » : cinq graphiques
 source("fonctions/prediction.R")   # onglet « Prédire un match » : modèles de décision

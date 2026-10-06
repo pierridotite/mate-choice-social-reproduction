@@ -92,8 +92,10 @@ manquants_par_vague <- function(dates, colonnes) {
 
 # --- 1. La structure : une soirée vue d'en haut ----------------------------------------
 
-statuts_rencontre <- c("Match" = "#1baf7a", "Oui de la femme seulement" = col_femme,
-                       "Oui de l'homme seulement" = col_homme, "Aucun oui" = "#e1e0d9")
+statuts_rencontre <- c("Match" = palette_amour[["rouge"]],
+                       "Oui de la femme seulement" = col_femme,
+                       "Oui de l'homme seulement" = col_homme,
+                       "Aucun oui" = palette_amour[["gris_rose"]])
 
 # Une ligne par femme, une colonne par homme : chaque case est une rencontre
 table_grille <- function(dates, vague) {
@@ -281,15 +283,16 @@ graphique_croisement <- function(d, v1, v2) {
     mutate(total = sum(n), part = if_else(total > 0, n / total, NA), .by = c(genre, a)) |>
     mutate(a = fct_rev(a),
            etiquette = if_else(is.na(part) | n == 0, "", str_remove(pct(part), " %")),
-           encre = if_else(!is.na(part) & part > 0.5, "white", col_dark),
+           encre = if_else(!is.na(part) & part > 0.72, "white", col_dark),
            texte = paste0(genre, " — ", a, "\n", b, " : ", n, " sur ", total, " (",
                           if_else(is.na(part), "–", pct(part)), ")"))
   p <- ggplot(t, aes(x = b, y = a, fill = part, text = texte)) +
-    geom_tile(colour = "white", linewidth = 0.6) +
+    geom_tile(colour = palette_amour[["fond"]], linewidth = 0.6) +
     geom_text(aes(label = etiquette, colour = encre), size = 2.6) +
     scale_colour_identity() +
-    scale_fill_gradient(low = "#cde2fb", high = "#104281", labels = pourcent, limits = c(0, 1),
-                        na.value = "white", name = "Part de la ligne") +
+    scale_fill_gradient(low = palette_amour[["rose_doux"]], high = palette_amour[["prune"]],
+              labels = pourcent, limits = c(0, 1), na.value = palette_amour[["fond"]],
+              name = "Part de la ligne") +
     scale_x_discrete(labels = \(v) str_wrap(v, 16)) +
     scale_y_discrete(labels = \(v) str_wrap(v, 30)) +
     facet_wrap(vars(genre)) +
@@ -422,7 +425,8 @@ graphique_surface <- function(dates, note_x, note_y, genre_choisi, n_min = 15) {
   couleur <- if (genre_choisi == "Femmes") col_femme else col_homme
   plot_ly() |>
     add_surface(x = pas, y = pas, z = z, text = texte, hoverinfo = "text", opacity = 0.85,
-                colorscale = list(c(0, "#f0efec"), c(1, couleur)), cmin = 0, cmax = 1,
+                colorscale = list(c(0, palette_amour[["fond"]]),
+                                  c(1, couleur)), cmin = 0, cmax = 1,
                 colorbar = list(title = "Probabilité<br>de oui", tickformat = ".0%", len = 0.6),
                 name = "Surface lissée") |>
     add_trace(data = points, x = ~x, y = ~y, z = ~taux, text = ~texte, hoverinfo = "text",
@@ -444,13 +448,13 @@ graphique_manquants <- function(manquants) {
     mutate(bloc = fct_reorder(bloc, manquants, .desc = TRUE),
            texte = paste0("Vague ", wave, "\n", bloc, "\n", pct(manquants),
                           " de valeurs manquantes en moyenne (", colonnes, " colonnes)"),
-           etiquette = pct(manquants), encre = if_else(manquants > 0.55, "white", col_dark))
+           etiquette = pct(manquants), encre = if_else(manquants > 0.72, "white", col_dark))
   p <- ggplot(d, aes(x = wave, y = bloc, fill = manquants, text = texte)) +
-    geom_tile(colour = "white", linewidth = 0.8) +
+    geom_tile(colour = palette_amour[["fond"]], linewidth = 0.8) +
     geom_text(aes(label = str_remove(etiquette, " %"), colour = encre), size = 2.6) +
     scale_colour_identity() +
-    scale_fill_gradient(low = "#cde2fb", high = "#104281", labels = pourcent, limits = c(0, 1),
-                        name = "Manquants") +
+    scale_fill_gradient(low = palette_amour[["gris_rose"]], high = palette_amour[["rouge"]],
+              labels = pourcent, limits = c(0, 1), name = "Manquants") +
     scale_y_discrete(labels = \(v) str_wrap(v, 28)) +
     labs(x = "Vague (soirée)", y = NULL) +
     theme(panel.grid = element_blank())

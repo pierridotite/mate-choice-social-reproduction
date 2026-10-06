@@ -1,10 +1,24 @@
 navbarPage(
-  header = tags$head(tags$link(rel = "stylesheet", href = "style.css")),
-  title = "Speed dating et milieu social",
+  header = tags$head(
+    tags$link(rel = "preconnect", href = "https://fonts.googleapis.com"),
+    tags$link(rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = "anonymous"),
+    tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"),
+    tags$link(rel = "stylesheet", href = "style.css"),
+    tags$script(src = "cupidien.js")
+  ),
+  title = "Rencontres et reproduction sociale",
   id = "navigation",
-  theme = bs_theme(version = 5, primary = col_accent, "font-size-base" = "0.95rem"),
+  theme = bs_theme(
+    version = 5,
+    primary = palette_amour[["rouge"]],
+    secondary = palette_amour[["prune"]],
+    bg = palette_amour[["fond"]],
+    `bg-dark` = palette_amour[["prune"]],
+    fg = palette_amour[["texte"]],
+    "font-size-base" = "0.95rem"
+  ),
 
-  # --- Découvrir les données : cinq graphiques --------------------------------------------
+  # --- Découvrir les données ---------------------------------------------------------------
   tabPanel(
     "Découvrir les données",
     div(
@@ -12,11 +26,9 @@ navbarPage(
       navlistPanel(
         id = "parcours", widths = c(2, 10), well = FALSE,
 
-        "Cinq graphiques",
-
         # 1. La structure ---------------------------------------------------------------------
         tabPanel(
-          "1. La structure", value = "structure",
+          "La structure", value = "structure",
           h3("Une soirée vue d'en haut : chaque case est une rencontre"),
           p(class = "intro",
             "21 soirées de speed dating à l'université Columbia (2002-2004). Dans une soirée,",
@@ -54,7 +66,7 @@ navbarPage(
 
         # 2. Les participants ------------------------------------------------------------------
         tabPanel(
-          "2. Les participants", value = "participants",
+          "Les participants", value = "participants",
           h3("Qui sont les participants ?"),
           p(class = "intro",
             "Des étudiants de master, de doctorat et d'écoles professionnelles de Columbia. Ces",
@@ -89,7 +101,7 @@ navbarPage(
 
         # 3. Ce qu'ils disent rechercher ----------------------------------------------------
         tabPanel(
-          "3. Ce qu'ils recherchent", value = "preferences",
+          "Ce qu'ils recherchent", value = "preferences",
           h3("Ce qu'ils disent rechercher chez un partenaire"),
           p(class = "intro",
             "À plusieurs moments, chaque participant répartit 100 points entre six critères. Ces",
@@ -111,7 +123,7 @@ navbarPage(
 
         # 4. Ce qui les fait dire oui ---------------------------------------------------------
         tabPanel(
-          "4. Ce qui fait dire oui", value = "oui",
+          "Ce qui fait dire oui", value = "oui",
           h3("Ce qui les fait vraiment dire oui"),
           p(class = "intro",
             "Après chaque date, la fiche de notation demande six notes de 0 à 10, une",
@@ -153,7 +165,7 @@ navbarPage(
 
         # 5. Ce qui est fiable -------------------------------------------------------------
         tabPanel(
-          "5. Ce qui est fiable", value = "qualite",
+          "Ce qui est fiable", value = "qualite",
           h3("Ce qui est fiable, ce qui ne l'est pas"),
           p(class = "intro",
             "Les 217 colonnes viennent de questionnaires remplis à des moments différents. Part",
@@ -202,19 +214,16 @@ navbarPage(
     )
   ),
 
-  # --- Prédire un match -------------------------------------------------------------------
+  # --- Tester de compatibilité ----------------------------------------------------------
   tabPanel(
-    "Prédire un match",
+    "Testeur de compatibilité", value = "compatibilite",
     div(
       class = "parcours",
       h3("Ces deux personnes vont-elles matcher ?"),
       p(class = "intro",
-        "Choisis le profil d'une femme et d'un homme, le milieu social où chacun a grandi et, si",
-        "tu te places après la rencontre, les notes que chacun donne à l'autre. Le modèle estime",
-        "la probabilité que chacun dise oui, puis la probabilité de match (les deux oui). Tu peux",
-        "aussi partir d'un vrai couple de l'expérience et modifier ses critères. Les modèles sont",
-        "ajustés sur l'échantillon d'analyse du projet : les rencontres où le revenu du quartier",
-        "d'enfance est connu des deux côtés."),
+        "Choisis les profils de deux participants et, si tu le souhaites, leurs notes après la",
+        "rencontre. Le modèle estime ensuite la probabilité que chacun dise oui et celle d'un",
+        "match entre les deux."),
       fluidRow(
 
         # Formulaire ----------------------------------------------------------------------
@@ -232,7 +241,7 @@ navbarPage(
               column(4, selectInput("p_femme", "Femme", choices = NULL)),
               column(4, selectInput("p_homme", "Homme", choices = NULL))
             ),
-            actionButton("p_charger", "Remplir avec ce couple", class = "btn-outline-primary btn-sm"),
+            actionButton("p_charger", "♡ Remplir avec ce couple", class = "btn-rose btn-sm"),
             hr(),
             fluidRow(
               column(6,
@@ -282,23 +291,16 @@ navbarPage(
           uiOutput("p_reel"),
           h5("Ce qui pèse dans la prédiction"),
           p(class = "lecture",
-            "Pour chaque décision, effet de chaque facteur par rapport à une rencontre moyenne :",
-            "× 2 veut dire que ce facteur double la cote du oui, × 0,5 qu'il la divise par deux."),
+            "Les barres indiquent l'effet de chaque critère sur la probabilité de dire oui."),
           p(class = "lecture", uiOutput("t_etoile", inline = TRUE)),
           plotlyOutput("p_contributions", height = "440px"),
           h5("Le modèle est-il fiable ?"),
           uiOutput("p_performance"),
           p(class = "lecture",
-            "Chaque soirée est prédite par un modèle ajusté sur les vingt autres, puis les couples",
-            "sont rangés en dix groupes selon la probabilité prédite. Sur la diagonale, la",
-            "probabilité annoncée correspond au taux de match réellement observé."),
+            "La courbe de calibrage compare la probabilité prédite au taux réel de match."),
           plotlyOutput("p_calibration", height = "360px"),
           a_retenir(
-            "La réponse du projet se lit sur la barre ★ : le milieu social ne change presque rien. Un doublement de l'écart de revenu entre les quartiers multiplie la cote du oui par 0,94 chez les femmes et 0,99 chez les hommes, et les deux intervalles contiennent 1. Change le milieu social de l'un des deux : la probabilité de match bouge à peine.",
-            "Ajouter le milieu social au modèle n'améliore pas la prédiction : l'AUC du match reste de 0,846 avec ou sans lui.",
-            "Avant la rencontre, on ne sait presque rien : avec l'âge, l'origine, les centres d'intérêt et le milieu social, le modèle fait à peine mieux que le hasard (AUC de 0,54 pour le match, 0,5 étant le hasard).",
-            "Après la rencontre, les notes échangées suffisent à bien prédire : AUC de 0,85. Parmi les 10 % de couples jugés les plus probables, 66 % ont réellement matché, contre moins de 1 % parmi les 10 % les moins probables. L'attirance donnée est le facteur qui pèse le plus.",
-            "Limites : les notes sont données après le date, ce n'est donc pas une prédiction avant la rencontre ; les deux décisions sont supposées indépendantes ; les modèles portent sur les 3 693 décisions où le revenu est connu des deux côtés, surtout des participants qui ont grandi aux États-Unis ; les résultats valent pour des étudiants de Columbia au début des années 2000."
+            "Les modèles utilisent les profils et les notes disponibles. Les résultats sont limité à l'échantillon où le revenu du quartier d'enfance est connu des deux côtés."
           )
         )
       )
@@ -322,7 +324,7 @@ navbarPage(
           "colonnes : la structure de l'expérience, les participants, leurs préférences",
           "déclarées, ce qui les fait dire oui (avec une vue en 3D) et la fiabilité des",
           "données. Chacun se termine par un encadré « À retenir »."),
-        h4("Prédire un match"),
+        h4("Testeur de compatibilité"),
         p("Deux régressions logistiques, une par genre, estiment la probabilité que chacun dise",
           "oui à partir des profils, de l'écart de milieu social et, après la rencontre, des notes",
           "échangées. Un encadré montre ce que change l'écart de milieu social. La probabilité",
